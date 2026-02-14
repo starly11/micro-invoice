@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="Classic invoice template preview">
+  <rect width="640" height="420" fill="#f8fafc"/>
+  <rect x="40" y="40" width="220" height="28" fill="#0f172a"/>
+  <rect x="40" y="90" width="560" height="10" fill="#cbd5f5"/>
+  <rect x="40" y="120" width="300" height="10" fill="#e2e8f0"/>
+  <rect x="40" y="160" width="560" height="180" rx="10" fill="#ffffff" stroke="#e2e8f0"/>
+  <rect x="60" y="190" width="520" height="10" fill="#cbd5f5"/>
+  <rect x="60" y="220" width="460" height="10" fill="#e2e8f0"/>
+  <rect x="60" y="250" width="420" height="10" fill="#e2e8f0"/>
+  <rect x="60" y="280" width="380" height="10" fill="#e2e8f0"/>
+  <rect x="360" y="360" width="240" height="20" fill="#0f172a"/>
+</svg>

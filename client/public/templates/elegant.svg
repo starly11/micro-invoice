@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="Elegant invoice template preview">
+  <rect width="640" height="420" fill="#fdf2f8"/>
+  <rect x="40" y="40" width="260" height="20" fill="#9f1239"/>
+  <rect x="40" y="80" width="200" height="8" fill="#fbcfe8"/>
+  <rect x="40" y="120" width="560" height="200" rx="12" fill="#ffffff" stroke="#fbcfe8"/>
+  <rect x="70" y="150" width="500" height="10" fill="#f472b6"/>
+  <rect x="70" y="180" width="430" height="10" fill="#e2e8f0"/>
+  <rect x="70" y="210" width="380" height="10" fill="#e2e8f0"/>
+  <rect x="70" y="240" width="320" height="10" fill="#e2e8f0"/>
+  <rect x="360" y="350" width="240" height="20" fill="#9f1239"/>
+</svg>
