@@ -14,6 +14,10 @@ import express from 'express';
 import { authMiddleware } from '../middlewares/authMiddleware.js'
 
 const AuthRouter = express.Router();
+const clientUrl = String(process.env.CLIENT_URL || 'http://localhost:5173')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)[0] || 'http://localhost:5173';
 
 // Route to start Google Auth
 AuthRouter.get('/google', passport.authenticate('google', {
@@ -23,7 +27,7 @@ AuthRouter.get('/google', passport.authenticate('google', {
 
 // Route for Google to call back to
 AuthRouter.get('/google/callback',
-    passport.authenticate('google', { session: false, failureRedirect: '/login' }),
+    passport.authenticate('google', { session: false, failureRedirect: `${clientUrl}/login` }),
     googleAuthCallback
 );
 

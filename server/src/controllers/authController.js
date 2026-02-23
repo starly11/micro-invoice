@@ -11,10 +11,24 @@ import {
     deleteCloudinaryImageByUrl,
 } from "../utils/cloudinary.js";
 
-const isSecureRequest = (req) => req.secure || req.headers["x-forwarded-proto"] === "https";
+const isSecureRequest = (req) => {
+    const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
+        .split(",")[0]
+        .trim()
+        .toLowerCase();
+    return req.secure || forwardedProto === "https";
+};
+
+const getPrimaryClientUrl = () => {
+    const configured = String(process.env.CLIENT_URL || "")
+        .split(",")
+        .map((value) => value.trim())
+        .filter(Boolean);
+    return configured[0] || "http://localhost:5173";
+};
 
 const setAuthCookie = (req, res, token) => {
-    const secure = isSecureRequest(req);
+    const secure = process.env.NODE_ENV === "production" || isSecureRequest(req);
     res.cookie("token", token, {
         httpOnly: true,
         secure,
@@ -176,19 +190,21 @@ export const login = async (req, res) => {
 // ------------------------------------ googleAuthCallback --------------------
 export const googleAuthCallback = async (req, res) => {
     try {
+        const clientUrl = getPrimaryClientUrl();
         if (!req.user) {
-            return res.redirect(`${process.env.CLIENT_URL}/login`);
+            return res.redirect(`${clientUrl}/login`);
         }
 
         const token = req.user.generateJWT();
 
         setAuthCookie(req, res, token);
 
-        res.redirect(`${process.env.CLIENT_URL}/auth/callback`);
+        res.redirect(`${clientUrl}/auth/callback`);
 
     } catch (error) {
         console.error("Google Auth Error:", error);
-        res.redirect(`${process.env.CLIENT_URL}/login`);
+        const clientUrl = getPrimaryClientUrl();
+        res.redirect(`${clientUrl}/login`);
     }
 };
 
