@@ -180,13 +180,19 @@ export const submitFeedback = async (req, res) => {
 
 export const subscribeNewsletter = async (req, res) => {
     try {
-        ensureMailConfig();
         const payload = req.body || {};
         const email = String(payload.email || "").trim().toLowerCase();
         const source = String(payload.source || "landing").trim();
 
         if (!isValidEmail(email)) {
             return res.status(400).json({ message: "Valid email is required" });
+        }
+
+        if (!ensureMailConfig()) {
+            return res.status(200).json({
+                success: true,
+                message: "Subscribed. Email delivery is not configured yet.",
+            });
         }
 
         const transporter = await getTransporter();
