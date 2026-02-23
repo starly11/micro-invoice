@@ -1,8 +1,11 @@
 import axios from 'axios'
 
-const baseURL = import.meta.env.DEV
+const configuredBaseURL = String(import.meta.env.VITE_API_URL || '').trim()
+
+// In production on Vercel, always hit same-origin /api so cookies are first-party.
+const baseURL = import.meta.env.PROD
     ? '/api'
-    : (import.meta.env.VITE_API_URL || '/api')
+    : (configuredBaseURL || '/api')
 
 export const api = axios.create({
     baseURL,
