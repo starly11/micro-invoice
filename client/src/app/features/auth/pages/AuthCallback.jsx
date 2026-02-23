@@ -12,16 +12,6 @@ export const AuthCallback = () => {
     useEffect(() => {
         const hydrateUser = async () => {
             try {
-                // Extract token passed via URL query param from Google OAuth redirect
-                const params = new URLSearchParams(window.location.search);
-                const token = params.get("token");
-
-                if (token) {
-                    localStorage.setItem("token", token);
-                    // Clean the token out of the URL bar
-                    window.history.replaceState({}, document.title, "/auth/callback");
-                }
-
                 const user = await getMeApi();
 
                 if (!user) {

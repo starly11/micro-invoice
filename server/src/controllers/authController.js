@@ -180,8 +180,7 @@ export const login = async (req, res) => {
                 email: user.email,
                 provider: user.provider,
                 plan: user.plan
-            },
-            token,
+            }
         });
 
 
@@ -202,9 +201,9 @@ export const googleAuthCallback = async (req, res) => {
 
         const token = req.user.generateJWT();
 
-        // Pass token via URL param so the client (on a different domain)
-        // can store it in localStorage — cross-domain cookies are unreliable.
-        res.redirect(`${clientUrl}/auth/callback?token=${token}`);
+        setAuthCookie(req, res, token);
+
+        res.redirect(`${clientUrl}/auth/callback`);
 
     } catch (error) {
         console.error("Google Auth Error:", error);
