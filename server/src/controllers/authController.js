@@ -12,11 +12,15 @@ import {
 } from "../utils/cloudinary.js";
 
 const isSecureRequest = (req) => {
+    if (req.secure) return true;
     const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
         .split(",")[0]
         .trim()
         .toLowerCase();
-    return req.secure || forwardedProto === "https";
+    const forwardedSsl = String(req.headers["x-forwarded-ssl"] || "")
+        .trim()
+        .toLowerCase();
+    return forwardedProto === "https" || forwardedSsl === "on";
 };
 
 const getPrimaryClientUrl = () => {
@@ -28,7 +32,7 @@ const getPrimaryClientUrl = () => {
 };
 
 const setAuthCookie = (req, res, token) => {
-    const secure = process.env.NODE_ENV === "production" || isSecureRequest(req);
+    const secure = process.env.NODE_ENV === "production" ? true : isSecureRequest(req);
     res.cookie("token", token, {
         httpOnly: true,
         secure,
