@@ -1,8 +1,12 @@
 import jwt from 'jsonwebtoken'
 export const authMiddleware = (req, res, next) => {
 
-    // Check for token in cookie first, then Authorization header
-    const token = req.cookies.token || req.headers.authorization?.replace('Bearer ', '');
+    const header = String(req.headers.authorization || '');
+    const bearerToken = header.toLowerCase().startsWith('bearer ')
+        ? header.slice(7).trim()
+        : '';
+    // Keep cookie fallback for backward compatibility.
+    const token = bearerToken || req.cookies?.token;
 
     if (!token) {
         return res.status(401).json({

@@ -1,7 +1,4 @@
-import passport from "passport";
 import User from "../models/User.js";
-import { Strategy as GoogleStrategy } from "passport-google-oauth20";
-import jwt from 'jsonwebtoken';
 import Invoice from "../models/Invoice.js";
 import Client from "../models/Client.js";
 import {
@@ -11,42 +8,12 @@ import {
     deleteCloudinaryImageByUrl,
 } from "../utils/cloudinary.js";
 
-const isSecureRequest = (req) => {
-    if (req.secure) return true;
-    const forwardedProto = String(req.headers["x-forwarded-proto"] || "")
-        .split(",")[0]
-        .trim()
-        .toLowerCase();
-    const forwardedSsl = String(req.headers["x-forwarded-ssl"] || "")
-        .trim()
-        .toLowerCase();
-    return forwardedProto === "https" || forwardedSsl === "on";
-};
-
 const getPrimaryClientUrl = () => {
     const configured = String(process.env.CLIENT_URL || "")
         .split(",")
         .map((value) => value.trim())
         .filter(Boolean);
     return configured[0] || "http://localhost:5173";
-};
-
-const setAuthCookie = (req, res, token) => {
-    const secure = process.env.NODE_ENV === "production" ? true : isSecureRequest(req);
-    res.cookie("token", token, {
-        httpOnly: true,
-        secure,
-        sameSite: secure ? "none" : "lax",
-        path: "/",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-};
-
-const clearAuthCookie = (res) => {
-    // Clear both variants so local/dev and production cookies are removed reliably.
-    const base = { httpOnly: true, path: "/" };
-    res.clearCookie("token", { ...base, secure: true, sameSite: "none" });
-    res.clearCookie("token", { ...base, secure: false, sameSite: "lax" });
 };
 
 // ---------------------------------------- getMe -------------------------
@@ -109,9 +76,6 @@ export const register = async (req, res) => {
         // Generate token for new user
         const token = newUser.generateJWT();
 
-        // Set auth cookie so user is logged in immediately after signup
-        setAuthCookie(req, res, token);
-
         return res.status(201).json({
             success: true,
             user: {
@@ -170,8 +134,6 @@ export const login = async (req, res) => {
         // Generate Token
         const token = user.generateJWT();
 
-        setAuthCookie(req, res, token);
-
         return res.status(200).json({
             success: true,
             user: {
@@ -179,8 +141,9 @@ export const login = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 provider: user.provider,
-                plan: user.plan
-            }
+                plan: user.plan,
+            },
+            token,
         });
 
 
@@ -200,10 +163,7 @@ export const googleAuthCallback = async (req, res) => {
         }
 
         const token = req.user.generateJWT();
-
-        setAuthCookie(req, res, token);
-
-        res.redirect(`${clientUrl}/auth/callback`);
+        res.redirect(`${clientUrl}/auth/callback?token=${encodeURIComponent(token)}`);
 
     } catch (error) {
         console.error("Google Auth Error:", error);
@@ -215,9 +175,6 @@ export const googleAuthCallback = async (req, res) => {
 // ================================ Logout ===================================
 export const logout = async (req, res) => {
     try {
-        clearAuthCookie(res);
-
-
         return res.status(200).json({
             success: true,
             message: 'Logout Successfully'
@@ -352,8 +309,6 @@ export const deleteAccount = async (req, res) => {
             Client.deleteMany({ owner: req.user.id }),
             User.findByIdAndDelete(req.user.id),
         ]);
-
-        clearAuthCookie(res);
 
         return res.status(200).json({ success: true, message: "Account deleted" });
     } catch (error) {

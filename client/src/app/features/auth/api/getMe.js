@@ -1,6 +1,9 @@
 import { api } from "../../../../api/axios";
+import { getStoredToken } from "./tokenStorage";
 
 export const getMeApi = async () => {
+    if (!getStoredToken()) return null;
+
     try {
         const res = await api.get("/auth/me");
         return res.data.user || null;

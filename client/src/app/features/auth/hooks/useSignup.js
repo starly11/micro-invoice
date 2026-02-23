@@ -3,11 +3,11 @@ import { signupApi } from "../api/signup";
 import { useAuthStore } from "../store/authStore";
 
 export const useSignup = () => {
-    const setUser = useAuthStore((state) => state.setUser)
+    const setAuth = useAuthStore((state) => state.setAuth)
 
     return useMutation({
         mutationFn: signupApi,
-        onSuccess: (user) => { setUser(user) }
+        onSuccess: ({ user, token }) => { setAuth({ user, token }) }
 
     })
 }

@@ -54,9 +54,9 @@ const InvoicesPage = lazy(() =>
 );
 
 export const App = () => {
-  const { isPending } = useAuth();
+  const { isHydrating } = useAuth();
 
-  if (isPending) {
+  if (isHydrating) {
     return <FullPageSpinner label="Loading app..." />;
   }
   return (

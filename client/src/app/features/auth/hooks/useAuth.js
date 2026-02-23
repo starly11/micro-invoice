@@ -4,11 +4,13 @@ import { getMeApi } from "../api/getMe";
 import { useAuthStore } from "../store/authStore";
 
 export const useAuth = () => {
-  const setUser = useAuthStore(state => state.setUser);
+  const setUser = useAuthStore((state) => state.setUser);
+  const token = useAuthStore((state) => state.token);
 
   const query = useQuery({
     queryKey: ["me"],
     queryFn: getMeApi,
+    enabled: Boolean(token),
     retry: false,
     refetchOnWindowFocus: false,
     staleTime: 5 * 60 * 1000,
@@ -16,13 +18,18 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
+    if (!token) {
+      setUser(null);
+      return;
+    }
     if (query.isSuccess) {
       setUser(query.data || null);
     }
     if (query.isError) {
       setUser(null);
     }
-  }, [query.isSuccess, query.isError, query.data, setUser]);
+  }, [token, query.isSuccess, query.isError, query.data, setUser]);
 
-  return query;
+  const isHydrating = Boolean(token) && query.isPending;
+  return { ...query, isHydrating };
 };
