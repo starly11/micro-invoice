@@ -1,4 +1,12 @@
+import { getStoredToken } from "../../auth/api/tokenStorage"
+
 const BASE_URL = "/api/clients"
+
+const buildAuthHeaders = (headers = {}) => {
+    const token = getStoredToken()
+    if (!token) return headers
+    return { ...headers, Authorization: `Bearer ${token}` }
+}
 
 async function handleResponse(response) {
     if (!response.ok) {
@@ -26,6 +34,7 @@ export async function getClients({ page = 1, limit = 20, search = "" } = {}) {
     })
     const response = await fetch(`${BASE_URL}?${params.toString()}`, {
         credentials: "include",
+        headers: buildAuthHeaders(),
     })
     return handleResponse(response)
 }
@@ -33,7 +42,7 @@ export async function getClients({ page = 1, limit = 20, search = "" } = {}) {
 export async function createClient(payload) {
     const response = await fetch(BASE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: buildAuthHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify(payload),
     })
@@ -43,7 +52,7 @@ export async function createClient(payload) {
 export async function updateClient(id, payload) {
     const response = await fetch(`${BASE_URL}/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: buildAuthHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify(payload),
     })
@@ -54,6 +63,7 @@ export async function deleteClient(id) {
     const response = await fetch(`${BASE_URL}/${id}`, {
         method: "DELETE",
         credentials: "include",
+        headers: buildAuthHeaders(),
     })
     return handleResponse(response)
 }

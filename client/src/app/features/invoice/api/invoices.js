@@ -1,4 +1,12 @@
+import { getStoredToken } from "../../auth/api/tokenStorage"
+
 const BASE_URL = "/api/invoices"
+
+const buildAuthHeaders = (headers = {}) => {
+    const token = getStoredToken()
+    if (!token) return headers
+    return { ...headers, Authorization: `Bearer ${token}` }
+}
 
 async function handleResponse(response) {
     if (!response.ok) {
@@ -23,6 +31,7 @@ export async function getInvoices({ page = 1, limit = 20 } = {}) {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) })
     const response = await fetch(`${BASE_URL}?${params.toString()}`, {
         credentials: "include",
+        headers: buildAuthHeaders(),
     })
     return handleResponse(response)
 }
@@ -30,6 +39,7 @@ export async function getInvoices({ page = 1, limit = 20 } = {}) {
 export async function getInvoice(id) {
     const response = await fetch(`${BASE_URL}/${id}`, {
         credentials: "include",
+        headers: buildAuthHeaders(),
     })
     return handleResponse(response)
 }
@@ -37,7 +47,7 @@ export async function getInvoice(id) {
 export async function createInvoice(payload) {
     const response = await fetch(BASE_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: buildAuthHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify(payload),
     })
@@ -47,7 +57,7 @@ export async function createInvoice(payload) {
 export async function updateInvoice(id, payload) {
     const response = await fetch(`${BASE_URL}/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: buildAuthHeaders({ "Content-Type": "application/json" }),
         credentials: "include",
         body: JSON.stringify(payload),
     })
@@ -58,6 +68,7 @@ export async function deleteInvoice(id) {
     const response = await fetch(`${BASE_URL}/${id}`, {
         method: "DELETE",
         credentials: "include",
+        headers: buildAuthHeaders(),
     })
     return handleResponse(response)
 }
