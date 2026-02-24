@@ -10,7 +10,7 @@ const baseURL = import.meta.env.PROD
 
 export const api = axios.create({
     baseURL,
-    withCredentials: false,
+    withCredentials: true,
     timeout: 15000,
 })
 

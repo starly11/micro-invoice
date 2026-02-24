@@ -16,10 +16,9 @@ export const AuthCallback = () => {
             try {
                 const params = new URLSearchParams(window.location.search);
                 const token = params.get("token");
-                if (!token) {
-                    throw new Error("Missing authentication token");
+                if (token) {
+                    setStoredToken(token);
                 }
-                setStoredToken(token);
 
                 const user = await getMeApi();
 
@@ -27,7 +26,7 @@ export const AuthCallback = () => {
                     throw new Error("Authentication failed");
                 }
 
-                setAuth({ user, token });
+                setAuth({ user, token: token || null });
                 toast.success("Logged in successfully");
                 navigate("/dashboard", { replace: true });
             } catch (err) {
