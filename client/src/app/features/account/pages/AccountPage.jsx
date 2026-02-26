@@ -26,6 +26,8 @@ export function AccountPage() {
     const updateBusiness = useUpdateBusiness()
     const deleteAccount = useDeleteAccount()
     const isPro = user?.plan === "pro"
+    const configuredPaymentMode = String(import.meta.env.VITE_PAYMENT_MODE || "mock").toLowerCase()
+    const showDemoPaymentBadge = configuredPaymentMode !== "stripe"
     const [activeTab, setActiveTab] = useState("profile")
     const [profileForm, setProfileForm] = useState({
         name: user?.name || "",
@@ -54,7 +56,10 @@ export function AccountPage() {
 
     const handleUpgrade = async () => {
         try {
-            const { url } = await createCheckout()
+            const { url, mode } = await createCheckout()
+            if (mode === "mock") {
+                toast.message("Demo payment mode enabled.")
+            }
             if (url) window.location.href = url
         } catch (error) {
             toast.error(error?.response?.data?.message || "Checkout failed")
@@ -191,6 +196,11 @@ export function AccountPage() {
 
             {activeTab === "subscription" && (
                 <div className="max-w-2xl space-y-4 rounded-lg border p-4">
+                    {showDemoPaymentBadge ? (
+                        <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                            Demo payment mode is active. Upgrade flow runs without Stripe for showcase purposes.
+                        </div>
+                    ) : null}
                     <div className="space-y-1 text-sm">
                         <div><span className="font-semibold">Plan:</span> {isPro ? "Unlimited ✓" : "Free"}</div>
                         <div><span className="font-semibold">Paid:</span> {isPro ? "$5.00 (one-time)" : "N/A"}</div>

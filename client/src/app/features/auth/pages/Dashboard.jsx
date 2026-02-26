@@ -26,13 +26,20 @@ export const Dashboard = () => {
   const invoices = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : []
   const stats = getInvoiceStats(invoices)
   const isPro = user?.plan === "pro"
+  const configuredPaymentMode = String(import.meta.env.VITE_PAYMENT_MODE || "mock").toLowerCase()
+  const showDemoPaymentBadge = configuredPaymentMode !== "stripe"
 
   useEffect(() => {
     const billing = searchParams.get("billing")
     if (!billing) return
 
     if (billing === "success") {
-      toast.success("Payment successful. Unlimited plan is now active.")
+      const paymentMode = searchParams.get("payment_mode") || "stripe"
+      if (paymentMode === "mock") {
+        toast.success("Demo payment completed. Unlimited plan activated for showcase mode.")
+      } else {
+        toast.success("Payment successful. Unlimited plan is now active.")
+      }
       queryClient.invalidateQueries({ queryKey: ["me"] })
       trackPublicActivityApi({ action: "user_upgraded", location: "Dashboard", source: "billing-success" }).catch(() => { })
     }
@@ -89,6 +96,12 @@ export const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      {showDemoPaymentBadge && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Demo payment mode enabled. Checkout uses a mock success flow for portfolio demo.
+        </div>
+      )}
+
       {!isPro && (
         <div className="rounded-lg border p-4 bg-slate-50 flex flex-wrap gap-3 items-center justify-between">
           <div className="text-sm">

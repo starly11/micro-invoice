@@ -5,5 +5,9 @@ export const createCheckoutSessionApi = async () => {
     if (!response?.data?.url) {
         throw new Error("Checkout URL missing from server response")
     }
-    return response.data
+    return {
+        url: response.data.url,
+        mode: response.data.mode || "stripe",
+        message: response.data.message || "",
+    }
 }

@@ -37,6 +37,8 @@ export default function CreateFreeInvoice() {
     const invoiceNumber = useInvoiceStore((s) => s.invoice.meta.invoiceNumber)
     const navigate = useNavigate()
     const { mutateAsync: createCheckout, isPending: isUpgrading } = useCreateCheckoutSession()
+    const configuredPaymentMode = String(import.meta.env.VITE_PAYMENT_MODE || "mock").toLowerCase()
+    const showDemoPaymentBadge = configuredPaymentMode !== "stripe"
     const [freeUsed, setFreeUsed] = useState(getStoredFreeUsage)
     const [showSuccessModal, setShowSuccessModal] = useState(false)
     const [feedbackRating, setFeedbackRating] = useState("")
@@ -67,7 +69,10 @@ export default function CreateFreeInvoice() {
             return
         }
         try {
-            const { url } = await createCheckout()
+            const { url, mode } = await createCheckout()
+            if (mode === "mock") {
+                toast.message("Demo payment mode enabled.")
+            }
             if (url) {
                 window.location.href = url
             }
@@ -171,6 +176,11 @@ export default function CreateFreeInvoice() {
                 <div className="mb-6 rounded-lg border bg-white p-4 text-sm">
                     <div className="font-semibold">You're creating a FREE invoice</div>
                     <div className="text-slate-600">No signup. No credit card. Try it first, then upgrade only if it helps.</div>
+                    {showDemoPaymentBadge ? (
+                        <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2 text-amber-900">
+                            Demo payment mode is active. Checkout is mocked for portfolio showcase.
+                        </div>
+                    ) : null}
                     <div className="mt-3 text-xs text-slate-600">
                         Step 1: Business {progress.hasBusiness ? "✓" : "•"} | Step 2: Client {progress.hasClient ? "✓" : "•"} | Step 3: Line items {progress.hasLineItem ? "✓" : "•"}
                     </div>

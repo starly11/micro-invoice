@@ -2,11 +2,24 @@ import Stripe from "stripe";
 import User from "../models/User.js";
 import PublicActivity from "../models/PublicActivity.js";
 
+const getPaymentMode = () => {
+    const rawMode = String(process.env.PAYMENT_MODE || "mock")
+        .trim()
+        .toLowerCase();
+    return rawMode === "stripe" ? "stripe" : "mock";
+};
+
+const isStripeEnabled = () => getPaymentMode() === "stripe" && Boolean(process.env.STRIPE_SECRET_KEY);
+
 const getStripe = () => {
-    if (!process.env.STRIPE_SECRET_KEY) {
-        throw new Error("STRIPE_SECRET_KEY is not configured");
+    if (!isStripeEnabled()) {
+        throw new Error("Stripe is not enabled. Set PAYMENT_MODE=stripe and STRIPE_SECRET_KEY.");
     }
     return new Stripe(process.env.STRIPE_SECRET_KEY);
+};
+
+const getClientUrl = (req) => {
+    return String(process.env.CLIENT_URL || req.headers.origin || "http://localhost:5173").replace(/\/$/, "");
 };
 
 const getCheckoutLineItem = () => {
@@ -34,11 +47,10 @@ const getCheckoutLineItem = () => {
 
 export const createCheckoutSession = async (req, res) => {
     try {
-        const stripe = getStripe();
-        const clientUrl = String(
-            process.env.CLIENT_URL || req.headers.origin || "http://localhost:5173"
-        ).replace(/\/$/, "");
-        const user = await User.findById(req.user.id).select("email plan stripeCustomerId");
+        const clientUrl = getClientUrl(req);
+        const user = await User.findById(req.user.id).select(
+            "email plan stripeCustomerId subscription paidAt stripePaymentId"
+        );
         if (!user) {
             return res.status(401).json({ message: "Unauthorized" });
         }
@@ -47,6 +59,31 @@ export const createCheckoutSession = async (req, res) => {
             return res.status(400).json({ message: "User is already on pro plan" });
         }
 
+        if (!isStripeEnabled()) {
+            const mockPaymentId = `mock_${Date.now()}`;
+            user.plan = "pro";
+            user.paidAt = new Date();
+            user.stripePaymentId = mockPaymentId;
+            user.subscription = {
+                ...(user.subscription || {}),
+                tier: "pro",
+            };
+            await user.save();
+
+            await PublicActivity.create({
+                action: "user_upgraded",
+                location: "Mock Checkout",
+                meta: { userId: String(user._id), paymentMode: "mock" },
+            });
+
+            return res.status(200).json({
+                mode: "mock",
+                url: `${clientUrl}/dashboard?billing=success&payment_mode=mock`,
+                message: "Demo payment mode enabled. User upgraded without Stripe.",
+            });
+        }
+
+        const stripe = getStripe();
         let customerId = user.stripeCustomerId;
         if (!customerId) {
             const customer = await stripe.customers.create({
@@ -70,7 +107,7 @@ export const createCheckoutSession = async (req, res) => {
             },
         });
 
-        return res.status(200).json({ url: session.url });
+        return res.status(200).json({ mode: "stripe", url: session.url });
     } catch (error) {
         return res.status(500).json({
             message: error.message || "Failed to create checkout session",
@@ -79,6 +116,10 @@ export const createCheckoutSession = async (req, res) => {
 };
 
 export const stripeWebhook = async (req, res) => {
+    if (!isStripeEnabled()) {
+        return res.status(200).json({ received: true, skipped: true, mode: "mock" });
+    }
+
     const sig = req.headers["stripe-signature"];
 
     try {
